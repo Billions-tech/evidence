@@ -16,20 +16,25 @@ require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Backend is running 🚀");
-});
+
 
 // Use receipt routes
 
 app.use("/api/auth", authRoutes);
 app.use("/api/receipts", authMiddleware, receiptRoutes);
-
 app.use("/api/notes", authMiddleware, notesRoutes);
 app.use("/api/expenses", authMiddleware, expenseRoutes);
-
 app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/inventory", authMiddleware, inventoryRoutes);
 
+
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
+
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+//app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+
+module.exports = app;
