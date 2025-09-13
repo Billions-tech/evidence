@@ -1,7 +1,7 @@
 // src/components/RecentReceipts.jsx
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
+import { getDashboardSummary, getAllReceipts } from "../api/receipts";
 import { Link } from "react-router-dom";
 import { FaReceipt, FaTrash, FaSearch } from "react-icons/fa";
 import { deleteReceipt } from "../api/receipts";
@@ -38,15 +38,14 @@ function RecentReceipts() {
       try {
         // If filtering by a specific month, fetch from summary endpoint
         if (period === "month" && selectedMonth && selectedYear) {
-          const res = await axios.get(
-            `http://localhost:5001/api/receipts/dashboard/summary?month=${selectedMonth}&year=${selectedYear}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
+          const res = await getDashboardSummary({
+            month: selectedMonth,
+            year: selectedYear,
+            token,
+          });
           setReceipts(res.data?.monthReceipts || []);
         } else {
-          const res = await axios.get("http://localhost:5001/api/receipts", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const res = await getAllReceipts(token);
           setReceipts(res.data);
         }
       } finally {

@@ -1,7 +1,7 @@
 // src/components/RevenueChart.jsx
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
+import { getAllReceipts } from "../api/receipts";
 import {
   ResponsiveContainer,
   LineChart,
@@ -20,9 +20,7 @@ export default function RevenueChart() {
   useEffect(() => {
     async function fetchReceipts() {
       try {
-        const res = await axios.get("http://localhost:5001/api/receipts", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await getAllReceipts(token);
         // Group by month/year
         const grouped = {};
         res.data.forEach((r) => {
@@ -50,8 +48,10 @@ export default function RevenueChart() {
 
   return (
     <div className="mx-auto  text-white px-6 py-5">
-      <h2 className="text-2xl text-center font-bold mb-4">Monthly Revenue Chart</h2>
-     
+      <h2 className="text-2xl text-center font-bold mb-4">
+        Monthly Revenue Chart
+      </h2>
+
       <ResponsiveContainer width="100%" height={300}>
         <LineChart
           data={data}

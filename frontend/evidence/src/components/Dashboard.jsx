@@ -1,7 +1,7 @@
 // src/components/Dashboard.jsx
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
+import { getDashboardSummary } from "../api/receipts";
 import {
   FaMoneyBillWave,
   FaReceipt,
@@ -26,14 +26,11 @@ export default function Dashboard() {
     async function fetchSummary(month, year) {
       setLoading(true);
       try {
-        const res = await axios.get(
-          `http://localhost:5001/api/receipts/dashboard/summary?month=${
-            month + 1
-          }&year=${year}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await getDashboardSummary({
+          month: month + 1,
+          year,
+          token,
+        });
         setSummary(res.data);
         // Debug: log summary and recentReceipts
         console.log("Dashboard summary:", res.data);

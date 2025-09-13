@@ -68,6 +68,7 @@ function Profile() {
       showSuccess("Business details updated!");
       setModal("");
     } catch (err) {
+      console.error(err);
       showError("Failed to update profile.");
     }
     setLoading(false);
@@ -90,6 +91,7 @@ function Profile() {
       setPwForm({ current: "", new: "", confirm: "" });
       setModal("");
     } catch (err) {
+      console.error(err);
       showError("Failed to change password.");
     }
     setLoading(false);
@@ -146,6 +148,7 @@ function Profile() {
                 );
                 window.location.href = "/";
               } catch (err) {
+                console.error(err);
                 window.Swal.fire("Error", "Failed to delete account.", "error");
               }
             }

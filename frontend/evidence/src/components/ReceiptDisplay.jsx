@@ -1,5 +1,4 @@
 // src/components/ReceiptDisplay.jsx
-import { QRCodeSVG } from "qrcode.react";
 import { QRCodeCanvas } from "qrcode.react";
 import {
   FaShareAlt,

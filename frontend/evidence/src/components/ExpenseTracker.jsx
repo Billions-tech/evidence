@@ -7,7 +7,7 @@ import {
 } from "../api/expenses";
 import { AuthContext } from "../context/AuthContext";
 import { FaCalculator, FaEdit, FaTrash, FaMoneyBillWave } from "react-icons/fa";
-import axios from "axios";
+import { getDashboardSummary } from "../api/receipts";
 
 function ExpenseTracker() {
   const [expenses, setExpenses] = useState([]);
@@ -36,13 +36,10 @@ function ExpenseTracker() {
 
   const fetchMonthRevenue = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:5001/api/receipts/dashboard/summary?month=${month}&year=${year}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await getDashboardSummary({ month, year, token });
       setMonthRevenue(res.data?.monthRevenue || 0);
     } catch (err) {
-      console.err(err)
+      console.error(err);
       setMonthRevenue(0);
     }
   };
@@ -131,7 +128,9 @@ function ExpenseTracker() {
         <div className="bg-gradient-to-br from-green-700 to-green-900 rounded-xl p-4 flex flex-col items-center shadow-lg min-w-[140px]">
           <FaMoneyBillWave className="text-2xl mb-2 text-green-300" />
           <div className="text-base text-green-300">Profit </div>
-          <div className="text-xl font-bold text-green-300">₦{profit.toLocaleString()}</div>
+          <div className="text-xl font-bold text-green-300">
+            ₦{profit.toLocaleString()}
+          </div>
         </div>
         <div className="bg-gradient-to-br from-indigo-700 to-indigo-900 rounded-xl p-4 flex flex-col items-center shadow-lg min-w-[140px]">
           <FaMoneyBillWave className="text-2xl mb-2 text-green-100" />

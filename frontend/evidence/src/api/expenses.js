@@ -1,7 +1,5 @@
 import axios from "axios";
-
-const BASE_URL = "http://localhost:5001/api";
-
+import { BASE_URL } from "./baseUrl";
 
 export const getExpenses = async (token) => {
   const res = await axios.get(`${BASE_URL}/expenses`, {

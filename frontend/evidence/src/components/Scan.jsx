@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import axios from "axios";
+import { verifyReceipt } from "../api/receipts";
 
 function Scan() {
   const [scanResult, setScanResult] = useState(null);
@@ -25,10 +25,7 @@ function Scan() {
             html5Qr.stop();
             // Verify with backend
             try {
-              const res = await axios.post(
-                "http://localhost:5001/api/receipts/verify",
-                { qrData: decodedText }
-              );
+              const res = await verifyReceipt(decodedText);
               setVerification(res.data);
             } catch (err) {
               console.error(err);
@@ -43,7 +40,10 @@ function Scan() {
             setError("Camera error or permission denied");
           }
         )
-        .catch((err) => console.error(err) || setError("Camera error or permission denied"));
+        .catch(
+          (err) =>
+            console.error(err) || setError("Camera error or permission denied")
+        );
     }
     return () => {
       if (html5Qr) {
