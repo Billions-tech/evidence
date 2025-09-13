@@ -1,0 +1,93 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int      @id @default(autoincrement())
+  name             String
+  email            String   @unique
+  password         String
+  phoneNumber      String?
+  businessName     String?
+  logo             String?
+  slogan           String?
+  defaultFooterMsg String?
+  createdAt        DateTime @default(now())
+  receipts         Receipt[]
+  notes            Note[]
+  expenses         Expense[]
+  inventory        InventoryItem[]
+}
+
+model Receipt {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  customer  String
+  footerMsg String?
+  createdAt DateTime      @default(now())
+
+  // Relations
+  user      User          @relation(fields: [userId], references: [id])
+  items     ReceiptItem[]
+}
+
+model ReceiptItem {
+  id        Int      @id @default(autoincrement())
+  receiptId Int
+  item      String
+  unit      String
+  price     Float
+  total     Float
+
+  // Relations
+  receipt   Receipt  @relation(fields: [receiptId], references: [id])
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Expense {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  amount    Float
+  category  String?
+  date      DateTime @default(now())
+  note      String?
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model InventoryItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  sku       String?  @unique
+  quantity  Int      @default(0)
+  costPrice Float
+  salePrice Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+}

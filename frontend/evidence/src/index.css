@@ -1,0 +1,9 @@
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+@import "tailwindcss";
+
+.receipt-capture-bg {
+  background: #fff !important;
+  background-image: none !important;
+}
