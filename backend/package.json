@@ -10,7 +10,7 @@
     "vercel-build": "prisma generate"
   },
   "keywords": [],
-  "author": "",
+  "author": "billions technology",
   "license": "ISC",
   "description": "",
   "devDependencies": {
