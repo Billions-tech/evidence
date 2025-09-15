@@ -1,3 +1,47 @@
+// Exported share function for use in ReceiptDisplay.jsx
+export async function shareReceiptAsImage(
+  elementId,
+  fileName = "receipt.png",
+  shareTitle = "Receipt Image",
+  shareText = "Receipt"
+) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  const { clone, restore } = prepareForCapture(element);
+  if (!clone) return;
+  document.body.appendChild(clone);
+  try {
+    const canvas = await html2canvas(clone, {
+      backgroundColor: "#fff",
+      useCORS: true,
+    });
+    await new Promise((resolve) => {
+      canvas.toBlob(async (blob) => {
+        if (!blob) return resolve();
+        const file = new File([blob], fileName, { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: shareTitle,
+              text: shareText,
+            });
+            return resolve();
+          } catch (err) {
+            alert("Share failed: " + err.message);
+            return resolve();
+          }
+        } else {
+          alert("Web Share API not supported on this device.");
+          return resolve();
+        }
+      }, "image/png");
+    });
+  } finally {
+    restore();
+    document.body.removeChild(clone);
+  }
+}
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 

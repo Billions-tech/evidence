@@ -32,8 +32,6 @@ export default function Dashboard() {
           token,
         });
         setSummary(res.data);
-        // Debug: log summary and recentReceipts
-        console.log("Dashboard summary:", res.data);
         if (res.data.recentReceipts) {
           res.data.recentReceipts.forEach((r, idx) => {
             let amount = 0;
@@ -105,22 +103,22 @@ export default function Dashboard() {
         </div>
       </div>
       {/* Summary Cards - Always Row, Responsive */}
-      <div className="flex  gap-2 sm:gap-4 mb-8 mx-auto justify-center items-center">
-        <div className="flex-1 min-w-[120px] max-w-[220px] bg-gradient-to-br from-indigo-700 to-indigo-900 rounded-xl p-3 sm:p-4 flex flex-col items-center shadow-lg">
+      <div className="flex  gap-2 sm:gap-4  mb-8 mx-auto justify-center items-center">
+        <div className="flex-1 min-w-[110px] max-w-[220px] bg-gradient-to-br from-indigo-700 to-indigo-900 rounded-xl p-3 sm:p-4 flex flex-col items-center shadow-lg">
           <FaMoneyBillWave className="text-2xl sm:text-3xl mb-2 text-green-400" />
           <div className="text-sm sm:text-lg">{monthName} Revenue</div>
           <div className="text-lg sm:text-2xl font-bold">
             ₦{summary?.monthRevenue?.toLocaleString()}
           </div>
         </div>
-        <div className="flex-1 min-w-[120px] max-w-[220px] bg-gradient-to-br from-purple-700 to-purple-900 rounded-xl p-3 sm:p-4 flex flex-col items-center shadow-lg">
+        <div className="flex-1 min-w-[110px] max-w-[220px] bg-gradient-to-br from-purple-700 to-purple-900 rounded-xl p-3 sm:p-4 flex flex-col items-center shadow-lg">
           <FaChartLine className="text-2xl sm:text-3xl mb-2 text-yellow-400" />
           <div className="text-sm sm:text-lg">Total Revenue</div>
           <div className="text-lg sm:text-2xl font-bold">
             ₦{summary?.totalRevenue?.toLocaleString()}
           </div>
         </div>
-        <div className="flex-1 min-w-[120px] max-w-[220px] bg-gradient-to-br from-blue-700 to-blue-900 rounded-xl p-3 sm:p-4 flex flex-col items-center shadow-lg">
+        <div className="flex-1 min-w-[110px] max-w-[220px] bg-gradient-to-br from-blue-700 to-blue-900 rounded-xl p-3 sm:p-4 flex flex-col items-center shadow-lg">
           <FaReceipt className="text-2xl sm:text-3xl mb-2 text-pink-400" />
           <div className="text-sm sm:text-lg">{monthName} Receipts</div>
           <div className="text-lg sm:text-2xl font-bold">

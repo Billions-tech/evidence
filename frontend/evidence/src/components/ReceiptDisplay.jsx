@@ -10,7 +10,9 @@ import {
 import {
   downloadReceiptAsPDF,
   downloadReceiptAsImage,
+  shareReceiptAsImage,
 } from "../utils/receiptDownload";
+
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
@@ -72,7 +74,7 @@ export default function ReceiptDisplay({ receipt }) {
     printWindow.close();
   };
 
-  // Download as PDF
+  // Download as PDF (uses utility to fix oklch error)
   const handleDownloadPDF = async () => {
     await downloadReceiptAsPDF(
       "receipt-display",
@@ -80,7 +82,7 @@ export default function ReceiptDisplay({ receipt }) {
     );
   };
 
-  // Download as Image
+  // Download as Image (uses utility to fix oklch error)
   const handleDownloadImage = async () => {
     await downloadReceiptAsImage(
       "receipt-display",
@@ -88,23 +90,14 @@ export default function ReceiptDisplay({ receipt }) {
     );
   };
 
-  // Share handler
+  // Share handler (uses exported utility)
   const handleShare = async () => {
-    const shareData = {
-      title: "Receipt",
-      text: `Receipt for ${receipt.customer}\nAmount: ₦${
-        receipt.amount
-      }\nDate: ${formatDate(receipt.createdAt)}`,
-    };
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        alert("Share failed: " + err.message);
-      }
-    } else {
-      alert("Web Share API not supported on this device.");
-    }
+    await shareReceiptAsImage(
+      "receipt-display",
+      `receipt_${receipt.id || Date.now()}.png`,
+      "Receipt Image",
+      `Receipt for ${receipt.customer}`
+    );
   };
 
   // Date formatting helper

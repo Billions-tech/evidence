@@ -132,46 +132,69 @@ function RecentReceipts() {
           >
             This Week
           </button>
-          <button
-            className={`px-4 py-2 rounded-lg font-semibold transition ${
-              period === "month"
-                ? "bg-pink-700 text-white"
-                : "bg-white/10 text-pink-200"
-            }`}
-            onClick={() => setPeriod("month")}
-          >
-            Month
-          </button>
+          {period !== "month" && (
+            <button
+              className={`px-4 py-2 rounded-lg font-semibold transition ${
+                period === "month"
+                  ? "bg-pink-700 text-white"
+                  : "bg-white/10 text-pink-200"
+              }`}
+              onClick={() => setPeriod("month")}
+            >
+              Month
+            </button>
+          )}
           {period === "month" && (
-            <>
-              <select
-                className="ml-2 px-2 py-1 rounded bg-indigo-900 text-white border border-indigo-700"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("default", {
-                      month: "long",
-                    })}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="ml-2 px-2 py-1 rounded bg-indigo-900 text-white border border-indigo-700"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-              >
-                {Array.from({ length: 5 }, (_, i) => {
-                  const y = new Date().getFullYear() - i;
-                  return (
-                    <option key={y} value={y}>
-                      {y}
+            <div className=" items-stretch w-full sm:w-auto mt-3 sm:mt-0 bg-white/10 rounded-lg px-3 py-4">
+              <div className="flex flex-col w-full sm:w-auto mb-3 sm:mb-0">
+                <label
+                  htmlFor="month-select"
+                  className="text-xs text-indigo-200 mb-2 ml-1"
+                >
+                  Month
+                </label>
+                <select
+                  id="month-select"
+                  className="px-4 py-3 rounded-lg bg-indigo-900 text-white border border-indigo-700 focus:ring-2 focus:ring-indigo-400 transition w-full text-base"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(0, i).toLocaleString("default", {
+                        month: "long",
+                      })}
                     </option>
-                  );
-                })}
-              </select>
-            </>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col w-full sm:w-auto">
+                <label
+                  htmlFor="year-select"
+                  className="text-xs text-indigo-200 mb-2 ml-1"
+                >
+                  Year
+                </label>
+                <select
+                  id="year-select"
+                  className="px-4 py-3 rounded-lg bg-indigo-900 text-white border border-indigo-700 focus:ring-2 focus:ring-indigo-400 transition w-full text-base"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                >
+                  {(() => {
+                    const currentYear = new Date().getFullYear();
+                    return Array.from({ length: 5 }, (_, i) => {
+                      const y = currentYear - i;
+                      return (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      );
+                    });
+                  })()}
+                </select>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -188,14 +211,22 @@ function RecentReceipts() {
             <span className="text-indigo-100">
               {(() => {
                 let amount = 0;
-                if (r.items && Array.isArray(r.items) && r.items.length > 0) {
-                  amount = r.items.reduce((sum, i) => sum + (i.total || 0), 0);
+                // Try to get amount from items, amount, or total
+                if (Array.isArray(r.items) && r.items.length > 0) {
+                  amount = r.items.reduce(
+                    (sum, i) => sum + (Number(i.total) || 0),
+                    0
+                  );
                 } else if (typeof r.amount === "number") {
                   amount = r.amount;
                 } else if (typeof r.total === "number") {
                   amount = r.total;
-                } else {
-                  amount = 0;
+                } else if (r.items && typeof r.items === "object") {
+                  // Sometimes items is an object, not array (defensive)
+                  amount = Object.values(r.items).reduce(
+                    (sum, i) => sum + (Number(i.total) || 0),
+                    0
+                  );
                 }
                 return amount > 0 ? `₦${amount.toLocaleString()}` : "-";
               })()}

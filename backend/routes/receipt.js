@@ -100,6 +100,7 @@ module.exports = (prisma) => {
       const receipts = await prisma.receipt.findMany({
         where: { userId },
         orderBy: { createdAt: "desc" },
+        include: { items: true },
       });
       res.json(receipts);
     } catch (error) {
