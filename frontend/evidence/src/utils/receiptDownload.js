@@ -48,35 +48,17 @@ import html2canvas from "html2canvas";
 // Prepare a clone for html2canvas: force safe background, remove unsupported colors, and inline SVGs (for QR code)
 function prepareForCapture(element) {
   if (!element) return { clone: null, restore: () => {} };
-  // Clone node
   const clone = element.cloneNode(true);
   // Replace QR code canvas with PNG image in the clone
   const canvases = element.querySelectorAll("canvas");
   const cloneCanvases = clone.querySelectorAll("canvas");
-  console.log(
-    "[receiptDownload] Canvases found:",
-    Array.from(canvases).map((c) => ({
-      width: c.width,
-      height: c.height,
-      outerHTML: c.outerHTML.slice(0, 100),
-    }))
-  );
   canvases.forEach((canvas, i) => {
     const img = document.createElement("img");
     img.src = canvas.toDataURL();
     img.width = canvas.width;
     img.height = canvas.height;
     cloneCanvases[i].replaceWith(img);
-    console.log(
-      `[receiptDownload] Canvas at index ${i} replaced with image (${canvas.width}x${canvas.height}).`
-    );
   });
-  // Save original style
-  const original = {
-    background: clone.style.background,
-    backgroundColor: clone.style.backgroundColor,
-    color: clone.style.color,
-  };
   // Recursively force all descendants to safe background/text color
   function forceSafeColors(node) {
     if (node.nodeType === 1) {
@@ -89,11 +71,7 @@ function prepareForCapture(element) {
   forceSafeColors(clone);
   return {
     clone,
-    restore: () => {
-      clone.style.background = original.background;
-      clone.style.backgroundColor = original.backgroundColor;
-      clone.style.color = original.color;
-    },
+    restore: () => {},
   };
 }
 
@@ -103,8 +81,7 @@ export async function downloadReceiptAsPDF(
 ) {
   const element = document.getElementById(elementId);
   if (!element) return;
-  const { clone, restore } = prepareForCapture(element);
-  if (!clone) return;
+  const { clone } = prepareForCapture(element);
   document.body.appendChild(clone);
   try {
     const canvas = await html2canvas(clone, {
@@ -118,18 +95,22 @@ export async function downloadReceiptAsPDF(
       format: [canvas.width, canvas.height],
     });
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-    // Use Blob for better mobile support
     const pdfBlob = pdf.output("blob");
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(blobUrl);
+    const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+    // Try native share first
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: "Receipt PDF",
+        text: "Here’s your receipt",
+      });
+    } else {
+      // Fallback: open in new tab for mobile Safari / others
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      window.open(blobUrl, "_blank");
+      URL.revokeObjectURL(blobUrl);
+    }
   } finally {
-    restore();
     document.body.removeChild(clone);
   }
 }
@@ -140,30 +121,34 @@ export async function downloadReceiptAsImage(
 ) {
   const element = document.getElementById(elementId);
   if (!element) return;
-  const { clone, restore } = prepareForCapture(element);
-  if (!clone) return;
+  const { clone } = prepareForCapture(element);
   document.body.appendChild(clone);
   try {
     const canvas = await html2canvas(clone, {
       backgroundColor: "#fff",
       useCORS: true,
     });
-    await new Promise((resolve) => {
-      canvas.toBlob((blob) => {
+    return new Promise((resolve) => {
+      canvas.toBlob(async (blob) => {
         if (!blob) return resolve();
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
+        const file = new File([blob], fileName, { type: "image/png" });
+        // Try native share
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: "Receipt Image",
+            text: "Here’s your receipt",
+          });
+        } else {
+          // Fallback: open image in new tab
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, "_blank");
+          URL.revokeObjectURL(blobUrl);
+        }
         resolve();
       }, "image/png");
     });
   } finally {
-    restore();
     document.body.removeChild(clone);
   }
 }
