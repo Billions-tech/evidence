@@ -118,7 +118,16 @@ export async function downloadReceiptAsPDF(
       format: [canvas.width, canvas.height],
     });
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-    pdf.save(fileName);
+    // Use Blob for better mobile support
+    const pdfBlob = pdf.output("blob");
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
   } finally {
     restore();
     document.body.removeChild(clone);
@@ -139,13 +148,20 @@ export async function downloadReceiptAsImage(
       backgroundColor: "#fff",
       useCORS: true,
     });
-    const image = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = image;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    await new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) return resolve();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        resolve();
+      }, "image/png");
+    });
   } finally {
     restore();
     document.body.removeChild(clone);
