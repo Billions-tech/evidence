@@ -28,13 +28,22 @@ export async function shareReceiptAsImage(
             });
             return resolve();
           } catch (err) {
-            alert("Share failed: " + err.message);
-            return resolve();
+            console.error(err);
+            // If share fails, fallback to download
           }
-        } else {
-          alert("Web Share API not supported on this device.");
-          return resolve();
         }
+        // Fallback: download using anchor click
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+        resolve();
       }, "image/png");
     });
   } finally {
@@ -99,17 +108,29 @@ export async function downloadReceiptAsPDF(
     const file = new File([pdfBlob], fileName, { type: "application/pdf" });
     // Try native share first
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: "Receipt PDF",
-        text: "Here’s your receipt",
-      });
-    } else {
-      // Fallback: open in new tab for mobile Safari / others
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      window.open(blobUrl, "_blank");
-      URL.revokeObjectURL(blobUrl);
+      try {
+        await navigator.share({
+          files: [file],
+          title: "Receipt PDF",
+          text: "Here’s your receipt",
+        });
+        return;
+      } catch (err) {
+        console.error(err);
+        // If share fails, fallback to download
+      }
     }
+    // Fallback: download using anchor click
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    }, 100);
   } finally {
     document.body.removeChild(clone);
   }
@@ -134,17 +155,30 @@ export async function downloadReceiptAsImage(
         const file = new File([blob], fileName, { type: "image/png" });
         // Try native share
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: "Receipt Image",
-            text: "Here’s your receipt",
-          });
-        } else {
-          // Fallback: open image in new tab
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, "_blank");
-          URL.revokeObjectURL(blobUrl);
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Receipt Image",
+              text: "Here’s your receipt",
+            });
+            return resolve();
+          } catch (err) {
+            console.error(err);
+
+            // If share fails, fallback to download
+          }
         }
+        // Fallback: download using anchor click
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
         resolve();
       }, "image/png");
     });
