@@ -68,12 +68,21 @@ function prepareForCapture(element) {
     img.height = canvas.height;
     cloneCanvases[i].replaceWith(img);
   });
-  // Recursively force all descendants to safe background/text color
+  // Recursively force all descendants to safe background/text color and replace oklch colors
   function forceSafeColors(node) {
     if (node.nodeType === 1) {
-      node.style.background = "#fff";
-      node.style.backgroundColor = "#fff";
-      node.style.color = "#222";
+      // Helper to replace oklch with safe color
+      function safeColor(val, fallback) {
+        if (!val) return fallback;
+        if (val.includes("oklch")) return fallback;
+        return val;
+      }
+      node.style.background = safeColor(node.style.background, "#fff");
+      node.style.backgroundColor = safeColor(
+        node.style.backgroundColor,
+        "#fff"
+      );
+      node.style.color = safeColor(node.style.color, "#222");
       Array.from(node.children).forEach(forceSafeColors);
     }
   }
