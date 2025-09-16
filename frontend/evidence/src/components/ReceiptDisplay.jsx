@@ -76,28 +76,46 @@ export default function ReceiptDisplay({ receipt }) {
 
   // Download as PDF (uses utility to fix oklch error)
   const handleDownloadPDF = async () => {
-    await downloadReceiptAsPDF(
-      "receipt-display",
-      `receipt_${receipt.id || Date.now()}.pdf`
-    );
+    try {
+      alert("Preparing PDF for download...");
+      await downloadReceiptAsPDF(
+        "receipt-display",
+        `receipt_${receipt.id || Date.now()}.pdf`
+      );
+      alert("PDF download/share complete!");
+    } catch (err) {
+      alert("PDF download failed: " + (err?.message || err));
+    }
   };
 
   // Download as Image (uses utility to fix oklch error)
   const handleDownloadImage = async () => {
-    await downloadReceiptAsImage(
-      "receipt-display",
-      `receipt_${receipt.id || Date.now()}.png`
-    );
+    try {
+      alert("Preparing image for download...");
+      await downloadReceiptAsImage(
+        "receipt-display",
+        `receipt_${receipt.id || Date.now()}.png`
+      );
+      alert("Image download/share complete!");
+    } catch (err) {
+      alert("Image download failed: " + (err?.message || err));
+    }
   };
 
   // Share handler (uses exported utility)
   const handleShare = async () => {
-    await shareReceiptAsImage(
-      "receipt-display",
-      `receipt_${receipt.id || Date.now()}.png`,
-      "Receipt Image",
-      `Receipt for ${receipt.customer}`
-    );
+    try {
+      alert("Preparing image for sharing...");
+      await shareReceiptAsImage(
+        "receipt-display",
+        `receipt_${receipt.id || Date.now()}.png`,
+        "Receipt Image",
+        `Receipt for ${receipt.customer}`
+      );
+      alert("Share or download complete!");
+    } catch (err) {
+      alert("Share failed: " + (err?.message || err));
+    }
   };
 
   // Date formatting helper
