@@ -71,18 +71,23 @@ function prepareForCapture(element) {
   // Recursively force all descendants to safe background/text color and replace oklch colors
   function forceSafeColors(node) {
     if (node.nodeType === 1) {
-      // Helper to replace oklch with safe color
-      function safeColor(val, fallback) {
-        if (!val) return fallback;
-        if (val.includes("oklch")) return fallback;
-        return val;
+      // Always set safe values to override inheritance and variables
+      node.style.setProperty("color", "#222", "important");
+      node.style.setProperty("background", "#fff", "important");
+      node.style.setProperty("background-color", "#fff", "important");
+
+      // Remove/override any CSS variables that may resolve to oklch
+      const style = node.style;
+      for (let i = style.length - 1; i >= 0; i--) {
+        const prop = style[i];
+        if (
+          prop.startsWith("--") &&
+          style.getPropertyValue(prop).includes("oklch")
+        ) {
+          style.setProperty(prop, "#fff");
+        }
       }
-      node.style.background = safeColor(node.style.background, "#fff");
-      node.style.backgroundColor = safeColor(
-        node.style.backgroundColor,
-        "#fff"
-      );
-      node.style.color = safeColor(node.style.color, "#222");
+
       Array.from(node.children).forEach(forceSafeColors);
     }
   }
