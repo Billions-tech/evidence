@@ -1,6 +1,25 @@
 import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
 
+// Wait for all images and fonts in the element to load
+async function waitForResources(element) {
+  // Wait for images
+  const images = Array.from(element.querySelectorAll("img"));
+  await Promise.all(
+    images.map((img) =>
+      img.complete && img.naturalHeight !== 0
+        ? Promise.resolve()
+        : new Promise((resolve) => {
+            img.onload = img.onerror = resolve;
+          })
+    )
+  );
+  // Wait for fonts
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+}
+
 /**
  * Share receipt as image (uses Web Share API if available, else downloads)
  */
@@ -12,9 +31,9 @@ export async function shareReceiptAsImage(
 ) {
   const element = document.getElementById(elementId);
   if (!element) return;
-  const { clone } = prepareForCapture(element);
+  await waitForResources(element);
   try {
-    const dataUrl = await toPng(clone, {
+    const dataUrl = await toPng(element, {
       cacheBust: true,
       backgroundColor: "#fff",
     });
@@ -58,9 +77,9 @@ export async function downloadReceiptAsPDF(
 ) {
   const element = document.getElementById(elementId);
   if (!element) return;
-  const { clone } = prepareForCapture(element);
+  await waitForResources(element);
   try {
-    const dataUrl = await toPng(clone, {
+    const dataUrl = await toPng(element, {
       cacheBust: true,
       backgroundColor: "#fff",
     });
@@ -92,9 +111,9 @@ export async function downloadReceiptAsImage(
 ) {
   const element = document.getElementById(elementId);
   if (!element) return;
-  const { clone } = prepareForCapture(element);
+  await waitForResources(element);
   try {
-    const dataUrl = await toPng(clone, {
+    const dataUrl = await toPng(element, {
       cacheBust: true,
       backgroundColor: "#fff",
     });
@@ -109,11 +128,4 @@ export async function downloadReceiptAsImage(
   } catch (err) {
     console.error(err);
   }
-}
-
-/**
- * Prepare a hidden clone for html2canvas
- */
-function prepareForCapture(element) {
-  return { clone: element, restore: () => {} };
 }
