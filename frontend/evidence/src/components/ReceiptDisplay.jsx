@@ -234,7 +234,7 @@ export default function ReceiptDisplay({ receipt }) {
               </tbody>
             </table>
           </div>
-          <div className="mt-2 text-right text-lg font-bold text-green-700">
+          <div className="mt-2 text-right text-sm font-bold text-green-700">
             Total: ₦{overallTotal}
           </div>
           <div className="mt-4 text-sm">

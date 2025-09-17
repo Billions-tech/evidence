@@ -18,7 +18,6 @@ function replaceQrCanvasesWithImages(element, clone) {
 
 /**
  * Sanitize oklch colors in computed styles for all elements in the DOM.
- * This is called in the html2canvas onclone hook.
  */
 function sanitizeOklchColors(root) {
   if (!root) return;
@@ -45,17 +44,31 @@ function sanitizeOklchColors(root) {
 }
 
 /**
- * Prepare a clone for html2canvas: replace QR canvases with <img>
+ * Prepare a hidden clone for html2canvas
  */
 function prepareForCapture(element) {
   if (!element) return { clone: null, restore: () => {} };
+
   const clone = element.cloneNode(true);
   replaceQrCanvasesWithImages(element, clone);
-  // Hide the clone so it never appears visually if appended
-  clone.style.display = "none";
+
+  // Make it invisible but renderable
+  clone.style.position = "fixed";
+  clone.style.top = "-9999px";
+  clone.style.left = "-9999px";
+  clone.style.opacity = "0";
+  clone.style.pointerEvents = "none";
+  clone.style.zIndex = "-1";
+
+  document.body.appendChild(clone);
+
   return {
     clone,
-    restore: () => {},
+    restore: () => {
+      if (clone && clone.parentNode) {
+        clone.parentNode.removeChild(clone);
+      }
+    },
   };
 }
 
@@ -72,105 +85,39 @@ export async function shareReceiptAsImage(
   if (!element) return;
   const { clone, restore } = prepareForCapture(element);
   if (!clone) return;
-  // Do not append the clone to the DOM visually
-  try {
-    await new Promise((resolve) => {
-      html2canvas(clone, {
-        backgroundColor: "#fff",
-        useCORS: true,
-        onclone: (clonedDoc) => {
-          // Find the correct clone in the html2canvas shadow DOM
-          const clonedRoot =
-            clonedDoc.body.querySelector(`#${clone.id}`) ||
-            clonedDoc.body.firstElementChild;
-          sanitizeOklchColors(clonedRoot);
-        },
-      }).then((canvas) => {
-        canvas.toBlob(async (blob) => {
-          if (!blob) return resolve();
-          const file = new File([blob], fileName, { type: "image/png" });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({
-                files: [file],
-                title: shareTitle,
-                text: shareText,
-              });
-              return resolve();
-            } catch (err) {
-              console.error("Share failed, falling back to download:", err);
-              // If share fails, fallback to download
-            }
-          }
-          // Fallback: download using anchor click
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = blobUrl;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(blobUrl);
-          }, 100);
-          resolve();
-        }, "image/png");
-      });
-    });
-  } finally {
-    restore();
-    // No need to remove clone from DOM since it was never appended
-  }
-}
 
-/**
- * Download receipt as PDF (uses jsPDF, html2canvas, and color sanitization)
- */
-export async function downloadReceiptAsPDF(
-  elementId,
-  fileName = "receipt.pdf"
-) {
-  const element = document.getElementById(elementId);
-  if (!element) return;
-  const { clone } = prepareForCapture(element);
-  // Do not append the clone to the DOM visually
   try {
+    const canvas = await html2canvas(clone, {
+      backgroundColor: "#fff",
+      useCORS: true,
+      onclone: (clonedDoc) => {
+        const clonedRoot =
+          clonedDoc.body.querySelector(`#${clone.id}`) ||
+          clonedDoc.body.firstElementChild;
+        sanitizeOklchColors(clonedRoot);
+      },
+    });
+
     await new Promise((resolve) => {
-      html2canvas(clone, {
-        backgroundColor: "#fff",
-        useCORS: true,
-        onclone: (clonedDoc) => {
-          const clonedRoot =
-            clonedDoc.body.querySelector(`#${clone.id}`) ||
-            clonedDoc.body.firstElementChild;
-          sanitizeOklchColors(clonedRoot);
-        },
-      }).then(async (canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF({
-          orientation: "portrait",
-          unit: "px",
-          format: [canvas.width, canvas.height],
-        });
-        pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-        const pdfBlob = pdf.output("blob");
-        const file = new File([pdfBlob], fileName, { type: "application/pdf" });
-        // Try native share first
+      canvas.toBlob(async (blob) => {
+        if (!blob) return resolve();
+        const file = new File([blob], fileName, { type: "image/png" });
+
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
             await navigator.share({
               files: [file],
-              title: "Receipt PDF",
-              text: "Here’s your receipt",
+              title: shareTitle,
+              text: shareText,
             });
             return resolve();
           } catch (err) {
             console.error("Share failed, falling back to download:", err);
-            // If share fails, fallback to download
           }
         }
-        // Fallback: download using anchor click
-        const blobUrl = URL.createObjectURL(pdfBlob);
+
+        // Fallback: download
+        const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = blobUrl;
         a.download = fileName;
@@ -181,15 +128,77 @@ export async function downloadReceiptAsPDF(
           URL.revokeObjectURL(blobUrl);
         }, 100);
         resolve();
-      });
+      }, "image/png");
     });
   } finally {
-    // No need to remove clone from DOM since it was never appended
+    restore();
   }
 }
 
 /**
- * Download receipt as image (uses Web Share API if available, else downloads)
+ * Download receipt as PDF (with share fallback)
+ */
+export async function downloadReceiptAsPDF(
+  elementId,
+  fileName = "receipt.pdf"
+) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  const { clone, restore } = prepareForCapture(element);
+
+  try {
+    const canvas = await html2canvas(clone, {
+      backgroundColor: "#fff",
+      useCORS: true,
+      onclone: (clonedDoc) => {
+        const clonedRoot =
+          clonedDoc.body.querySelector(`#${clone.id}`) ||
+          clonedDoc.body.firstElementChild;
+        sanitizeOklchColors(clonedRoot);
+      },
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "px",
+      format: [canvas.width, canvas.height],
+    });
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+    const pdfBlob = pdf.output("blob");
+    const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: "Receipt PDF",
+          text: "Here’s your receipt",
+        });
+        return;
+      } catch (err) {
+        console.error("Share failed, falling back to download:", err);
+      }
+    }
+
+    // Fallback: download
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    }, 100);
+  } finally {
+    restore();
+  }
+}
+
+/**
+ * Download receipt as image (with share fallback)
  */
 export async function downloadReceiptAsImage(
   elementId,
@@ -197,53 +206,53 @@ export async function downloadReceiptAsImage(
 ) {
   const element = document.getElementById(elementId);
   if (!element) return;
-  const { clone } = prepareForCapture(element);
-  // Do not append the clone to the DOM visually
+  const { clone, restore } = prepareForCapture(element);
+
   try {
+    const canvas = await html2canvas(clone, {
+      backgroundColor: "#fff",
+      useCORS: true,
+      onclone: (clonedDoc) => {
+        const clonedRoot =
+          clonedDoc.body.querySelector(`#${clone.id}`) ||
+          clonedDoc.body.firstElementChild;
+        sanitizeOklchColors(clonedRoot);
+      },
+    });
+
     await new Promise((resolve) => {
-      html2canvas(clone, {
-        backgroundColor: "#fff",
-        useCORS: true,
-        onclone: (clonedDoc) => {
-          const clonedRoot =
-            clonedDoc.body.querySelector(`#${clone.id}`) ||
-            clonedDoc.body.firstElementChild;
-          sanitizeOklchColors(clonedRoot);
-        },
-      }).then((canvas) => {
-        canvas.toBlob(async (blob) => {
-          if (!blob) return resolve();
-          const file = new File([blob], fileName, { type: "image/png" });
-          // Try native share
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({
-                files: [file],
-                title: "Receipt Image",
-                text: "Here’s your receipt",
-              });
-              return resolve();
-            } catch (err) {
-              console.error(err);
-              // If share fails, fallback to download
-            }
+      canvas.toBlob(async (blob) => {
+        if (!blob) return resolve();
+        const file = new File([blob], fileName, { type: "image/png" });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Receipt Image",
+              text: "Here’s your receipt",
+            });
+            return resolve();
+          } catch (err) {
+            console.error("Share failed, falling back to download:", err);
           }
-          // Fallback: download using anchor click
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = blobUrl;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(blobUrl);
-          }, 100);
-          resolve();
-        }, "image/png");
-      });
+        }
+
+        // Fallback: download
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+        resolve();
+      }, "image/png");
     });
   } finally {
-    // No need to remove clone from DOM since it was never appended
+    restore();
   }
 }
