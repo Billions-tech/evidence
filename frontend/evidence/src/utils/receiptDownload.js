@@ -21,14 +21,8 @@ function replaceQrCanvasesWithImages(element, clone) {
  */
 function sanitizeOklchColors(root) {
   if (!root) return;
-  const walker = document.createTreeWalker(
-    root,
-    NodeFilter.SHOW_ELEMENT,
-    null,
-    false
-  );
-  let node = walker.currentNode || root;
-  while (node) {
+  // Sanitize root itself
+  const sanitizeNode = (node) => {
     const computed = window.getComputedStyle(node);
     if (
       (computed.color && computed.color.includes("oklch")) ||
@@ -39,8 +33,10 @@ function sanitizeOklchColors(root) {
       node.style.setProperty("background", "#fff", "important");
       node.style.setProperty("background-color", "#fff", "important");
     }
-    node = walker.nextNode();
-  }
+  };
+  sanitizeNode(root);
+  // Sanitize all descendants
+  root.querySelectorAll("*").forEach(sanitizeNode);
 }
 
 /**
@@ -52,6 +48,8 @@ function prepareForCapture(element) {
   const clone = element.cloneNode(true);
   replaceQrCanvasesWithImages(element, clone);
 
+  // Give the clone a unique id for reliable lookup
+  clone.id = "receipt-capture-clone";
   // Make it invisible but renderable
   clone.style.position = "fixed";
   clone.style.top = "-9999px";
@@ -91,9 +89,9 @@ export async function shareReceiptAsImage(
       backgroundColor: "#fff",
       useCORS: true,
       onclone: (clonedDoc) => {
-        const clonedRoot =
-          clonedDoc.body.querySelector(`#${clone.id}`) ||
-          clonedDoc.body.firstElementChild;
+        const clonedRoot = clonedDoc.body.querySelector(
+          "#receipt-capture-clone"
+        );
         sanitizeOklchColors(clonedRoot);
       },
     });
@@ -151,9 +149,9 @@ export async function downloadReceiptAsPDF(
       backgroundColor: "#fff",
       useCORS: true,
       onclone: (clonedDoc) => {
-        const clonedRoot =
-          clonedDoc.body.querySelector(`#${clone.id}`) ||
-          clonedDoc.body.firstElementChild;
+        const clonedRoot = clonedDoc.body.querySelector(
+          "#receipt-capture-clone"
+        );
         sanitizeOklchColors(clonedRoot);
       },
     });
@@ -213,9 +211,9 @@ export async function downloadReceiptAsImage(
       backgroundColor: "#fff",
       useCORS: true,
       onclone: (clonedDoc) => {
-        const clonedRoot =
-          clonedDoc.body.querySelector(`#${clone.id}`) ||
-          clonedDoc.body.firstElementChild;
+        const clonedRoot = clonedDoc.body.querySelector(
+          "#receipt-capture-clone"
+        );
         sanitizeOklchColors(clonedRoot);
       },
     });
