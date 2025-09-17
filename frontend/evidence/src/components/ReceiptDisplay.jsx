@@ -237,7 +237,7 @@ export default function ReceiptDisplay({ receipt }) {
           <div className="mt-2 text-right text-lg font-bold text-green-700">
             Total: ₦{overallTotal}
           </div>
-          <div className="mt-4">
+          <div className="mt-4 text-sm">
             <span className="font-semibold text-yellow-600">🙌:</span>{" "}
             {receipt.footerMsg ||
               user?.defaultFooterMsg ||

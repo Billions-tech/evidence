@@ -22,7 +22,12 @@ function replaceQrCanvasesWithImages(element, clone) {
  */
 function sanitizeOklchColors(root) {
   if (!root) return;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_ELEMENT,
+    null,
+    false
+  );
   let node = walker.currentNode || root;
   while (node) {
     const computed = window.getComputedStyle(node);
@@ -31,9 +36,9 @@ function sanitizeOklchColors(root) {
       (computed.background && computed.background.includes("oklch")) ||
       (computed.backgroundColor && computed.backgroundColor.includes("oklch"))
     ) {
-      node.style.setProperty('color', '#222', 'important');
-      node.style.setProperty('background', '#fff', 'important');
-      node.style.setProperty('background-color', '#fff', 'important');
+      node.style.setProperty("color", "#222", "important");
+      node.style.setProperty("background", "#fff", "important");
+      node.style.setProperty("background-color", "#fff", "important");
     }
     node = walker.nextNode();
   }
@@ -46,6 +51,8 @@ function prepareForCapture(element) {
   if (!element) return { clone: null, restore: () => {} };
   const clone = element.cloneNode(true);
   replaceQrCanvasesWithImages(element, clone);
+  // Hide the clone so it never appears visually if appended
+  clone.style.display = "none";
   return {
     clone,
     restore: () => {},
@@ -65,14 +72,17 @@ export async function shareReceiptAsImage(
   if (!element) return;
   const { clone, restore } = prepareForCapture(element);
   if (!clone) return;
-  document.body.appendChild(clone);
+  // Do not append the clone to the DOM visually
   try {
     await new Promise((resolve) => {
       html2canvas(clone, {
         backgroundColor: "#fff",
         useCORS: true,
         onclone: (clonedDoc) => {
-          const clonedRoot = clonedDoc.body.querySelector(`#${clone.id}`) || clonedDoc.body.firstElementChild;
+          // Find the correct clone in the html2canvas shadow DOM
+          const clonedRoot =
+            clonedDoc.body.querySelector(`#${clone.id}`) ||
+            clonedDoc.body.firstElementChild;
           sanitizeOklchColors(clonedRoot);
         },
       }).then((canvas) => {
@@ -109,7 +119,7 @@ export async function shareReceiptAsImage(
     });
   } finally {
     restore();
-    document.body.removeChild(clone);
+    // No need to remove clone from DOM since it was never appended
   }
 }
 
@@ -123,14 +133,16 @@ export async function downloadReceiptAsPDF(
   const element = document.getElementById(elementId);
   if (!element) return;
   const { clone } = prepareForCapture(element);
-  document.body.appendChild(clone);
+  // Do not append the clone to the DOM visually
   try {
     await new Promise((resolve) => {
       html2canvas(clone, {
         backgroundColor: "#fff",
         useCORS: true,
         onclone: (clonedDoc) => {
-          const clonedRoot = clonedDoc.body.querySelector(`#${clone.id}`) || clonedDoc.body.firstElementChild;
+          const clonedRoot =
+            clonedDoc.body.querySelector(`#${clone.id}`) ||
+            clonedDoc.body.firstElementChild;
           sanitizeOklchColors(clonedRoot);
         },
       }).then(async (canvas) => {
@@ -172,7 +184,7 @@ export async function downloadReceiptAsPDF(
       });
     });
   } finally {
-    document.body.removeChild(clone);
+    // No need to remove clone from DOM since it was never appended
   }
 }
 
@@ -186,14 +198,16 @@ export async function downloadReceiptAsImage(
   const element = document.getElementById(elementId);
   if (!element) return;
   const { clone } = prepareForCapture(element);
-  document.body.appendChild(clone);
+  // Do not append the clone to the DOM visually
   try {
     await new Promise((resolve) => {
       html2canvas(clone, {
         backgroundColor: "#fff",
         useCORS: true,
         onclone: (clonedDoc) => {
-          const clonedRoot = clonedDoc.body.querySelector(`#${clone.id}`) || clonedDoc.body.firstElementChild;
+          const clonedRoot =
+            clonedDoc.body.querySelector(`#${clone.id}`) ||
+            clonedDoc.body.firstElementChild;
           sanitizeOklchColors(clonedRoot);
         },
       }).then((canvas) => {
@@ -210,7 +224,7 @@ export async function downloadReceiptAsImage(
               });
               return resolve();
             } catch (err) {
-              console.error(err)
+              console.error(err);
               // If share fails, fallback to download
             }
           }
@@ -230,6 +244,6 @@ export async function downloadReceiptAsImage(
       });
     });
   } finally {
-    document.body.removeChild(clone);
+    // No need to remove clone from DOM since it was never appended
   }
 }
