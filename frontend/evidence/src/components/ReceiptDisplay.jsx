@@ -160,16 +160,7 @@ export default function ReceiptDisplay({ receipt }) {
       </div>
       <div
         id="receipt-display"
-        className="mx-auto max-w-md w-full p-8 rounded-2xl shadow-2xl bg-white border border-indigo-200 text-gray-900 print:bg-white print:shadow-none print:border-none flex flex-col items-center justify-center"
-        style={{
-          margin: "0 auto",
-          background: "#fff",
-          padding: "2rem",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        className="mx-auto max-w-md p-8 rounded-2xl shadow-2xl bg-white border border-indigo-200 text-gray-900 print:bg-white print:shadow-none print:border-none"
       >
         {/* Business Info */}
         <div className="flex items-center justify-center mx-auto gap-5 mb-4">

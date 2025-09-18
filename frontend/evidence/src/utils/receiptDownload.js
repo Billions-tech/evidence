@@ -1,8 +1,25 @@
 import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
 
-// Wait for all images and fonts in the element to load
+// Replace QR code canvas with image for reliable capture
+function replaceQrCanvasWithImage(element) {
+  const canvases = element.querySelectorAll("canvas");
+  canvases.forEach((canvas) => {
+    // Only replace if it's a QR code (by size or class)
+    if (canvas.width >= 80 && canvas.height >= 80) {
+      const img = document.createElement("img");
+      img.src = canvas.toDataURL();
+      img.width = canvas.width;
+      img.height = canvas.height;
+      img.style.display = canvas.style.display;
+      canvas.parentNode.replaceChild(img, canvas);
+    }
+  });
+}
+
+// Wait for all images and fonts in the element to load, and replace QR canvas
 async function waitForResources(element) {
+  replaceQrCanvasWithImage(element);
   // Wait for images
   const images = Array.from(element.querySelectorAll("img"));
   await Promise.all(
