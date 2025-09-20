@@ -38,8 +38,8 @@ export default function AdminDashboard() {
     async function fetchData() {
       setLoading(true);
       try {
-        const resMetrics = await fetch(`${BASE_URL}/metrics`);
-        const resActivity = await fetch(`${BASE_URL}/activity`);
+        const resMetrics = await fetch(`${BASE_URL}/admin/metrics`);
+        const resActivity = await fetch(`${BASE_URL}/admin/activity`);
         console.log("Metrics response:", resMetrics);
         console.log("Activity response:", resActivity);
         setMetrics(await resMetrics.json());

@@ -24,9 +24,7 @@ app.use("/api/notes", authMiddleware, notesRoutes);
 app.use("/api/expenses", authMiddleware, expenseRoutes);
 app.use("/api/user", authMiddleware, userRoutes);
 app.use("/api/inventory", authMiddleware, inventoryRoutes);
-app.use('/api/basho', require('./routes/basho')(prisma));
-app.use('/api/activity', require('./routes/activity')(prisma));
-app.use('/api/metrics', require('./routes/metrics')(prisma));
+app.use("/api/admin", require("./routes/admin")(prisma));
 
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
