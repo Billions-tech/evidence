@@ -91,3 +91,12 @@ model InventoryItem {
 
   user      User     @relation(fields: [userId], references: [id])
 }
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   String?
+  timestamp DateTime @default(now())
+}

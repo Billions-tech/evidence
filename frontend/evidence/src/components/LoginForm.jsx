@@ -47,7 +47,7 @@ export default function LoginForm() {
         <h2 className="text-3xl font-extrabold mb-6 text-center tracking-wider text-indigo-200">
           Login
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 mb-4">
           <div className="flex items-center border border-indigo-700 bg-white/20 p-3 rounded-lg">
             <FaEnvelope className="mr-3 text-indigo-300 text-xl" />
             <input
@@ -74,7 +74,7 @@ export default function LoginForm() {
           </div>
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center transition"
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg flex items-center mb-4 justify-center transition"
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}
@@ -83,6 +83,16 @@ export default function LoginForm() {
             <div className="text-red-400 mt-2 text-center">{error}</div>
           )}
         </form>
+
+        <div className=" my-4 font-bold tracking-wider text-center w-full text-indigo-200 text-sm">
+          Don't have an account?{" "}
+          <a
+            href="/register"
+            className="text-yellow-400 underline font-semibold"
+          >
+            Register
+          </a>
+        </div>
       </div>
     </div>
   );

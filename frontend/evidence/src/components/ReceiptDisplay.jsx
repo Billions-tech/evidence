@@ -1,5 +1,5 @@
 // src/components/ReceiptDisplay.jsx
-import { QRCodeCanvas } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 import {
   FaShareAlt,
   FaPrint,
@@ -192,11 +192,7 @@ export default function ReceiptDisplay({ receipt }) {
         </div>
         {/* QR Code */}
         <div className="mb-6 flex flex-col items-center justify-center">
-          <QRCodeCanvas
-            value={qrData}
-            size={100}
-            className="mx-auto text-black"
-          />
+          <QRCodeSVG value={qrData} size={64} className="mx-auto text-black" />
           <div className="text-xs text-gray-500 mt-2">
             Scan for authenticity
           </div>
@@ -249,6 +245,24 @@ export default function ReceiptDisplay({ receipt }) {
           Powered by Billions Technologies
         </div>
       </div>
+      <style>{`
+        @media print {
+          body {
+            background: #fff !important;
+          }
+          #receipt-display {
+            margin: 0 auto !important;
+            box-shadow: none !important;
+            border: none !important;
+            width: 80mm !important;
+            min-width: 80mm !important;
+            max-width: 80mm !important;
+            padding: 0.5in !important;
+            background: #fff !important;
+            display: block !important;
+          }
+        }
+      `}</style>
     </>
   );
 }

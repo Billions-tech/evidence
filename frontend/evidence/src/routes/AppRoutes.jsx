@@ -25,6 +25,8 @@ import ExpenseTracker from "../components/ExpenseTracker";
 import Calculator from "../components/Calculator";
 import Profile from "../components/Profile";
 import Inventory from "../components/Inventory";
+import LandingPage from "../components/LandingPage";
+import AdminDashboard from "../components/AdminDashboard";
 
 function ReceiptDisplayPage() {
   const { id } = useParams();
@@ -57,8 +59,10 @@ export default function AppRoutes() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<RegistrationForm />} />
         <Route path="/login" element={<LoginForm />} />
+        <Route path="/basho" element={<AdminDashboard />} />
         <Route
           path="/dashboard"
           element={
@@ -118,7 +122,7 @@ export default function AppRoutes() {
               </MainLayout>
             </ProtectedRoute>
           }
-          />
+        />
         <Route
           path="/scan"
           element={
@@ -128,7 +132,7 @@ export default function AppRoutes() {
               </MainLayout>
             </ProtectedRoute>
           }
-          />
+        />
 
         <Route
           path="/notes"
@@ -180,7 +184,16 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/dashboard" />} />
+        <Route
+          path="*"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Navigate to="/dashboard" />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

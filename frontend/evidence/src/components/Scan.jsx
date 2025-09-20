@@ -72,7 +72,7 @@ function Scan() {
             id="qr-reader"
             ref={qrRef}
             className="rounded-xl overflow-hidden border border-indigo-200 bg-indigo-50 flex items-center justify-center"
-            style={{ width: "100%", maxWidth: 320, height: 320 }}
+            style={{ width: "100%", maxWidth: 420, height: 420 }}
           />
           {scanResult && (
             <div className="w-full mt-6 p-4 rounded-2xl shadow bg-gradient-to-br from-green-50 to-green-100 text-green-900 text-center animate-fade-in">

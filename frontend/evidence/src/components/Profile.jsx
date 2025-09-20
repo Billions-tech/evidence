@@ -206,7 +206,7 @@ function Profile() {
         <div className="mb-2 text-white">
           Status: <span className="font-bold text-green-400">{sub.status}</span>
         </div>
-        <div className="mb-2 text-white">
+        {/* <div className="mb-2 text-white">
           Renewal:{" "}
           <span className="font-bold text-indigo-300">{sub.renewal}</span>
         </div>
@@ -215,7 +215,7 @@ function Profile() {
           disabled
         >
           Manage Subscription (coming soon)
-        </button>
+        </button> */}
       </div>
 
       {/* Modals */}

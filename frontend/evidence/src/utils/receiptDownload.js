@@ -1,5 +1,23 @@
 import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
+import axios from "axios";
+
+function prepareForExport(element) {
+  // Temporarily override styles for clean export
+  const original = {
+    margin: element.style.margin,
+    display: element.style.display,
+    maxWidth: element.style.maxWidth,
+  };
+  element.style.margin = "0";
+  element.style.display = "inline-block";
+  element.style.maxWidth = "unset";
+  return () => {
+    element.style.margin = original.margin;
+    element.style.display = original.display;
+    element.style.maxWidth = original.maxWidth;
+  };
+}
 
 // Replace QR code canvas with image for reliable capture
 function replaceQrCanvasWithImage(element) {
@@ -44,7 +62,8 @@ export async function shareReceiptAsImage(
   elementId,
   fileName = "receipt.png",
   shareTitle = "Receipt Image",
-  shareText = "Receipt"
+  shareText = "Receipt",
+  userId = null // Pass userId if available
 ) {
   const element = document.getElementById(elementId);
   if (!element) return;
@@ -53,6 +72,13 @@ export async function shareReceiptAsImage(
     const dataUrl = await toPng(element, {
       cacheBust: true,
       backgroundColor: "#fff",
+      width: element.offsetWidth,
+      height: element.offsetHeight,
+      style: {
+        margin: "0",
+        display: "inline-block",
+        maxWidth: "unset",
+      },
     });
     const res = await fetch(dataUrl);
     const blob = await res.blob();
@@ -64,6 +90,14 @@ export async function shareReceiptAsImage(
           title: shareTitle,
           text: shareText,
         });
+        // Log share activity
+        if (userId) {
+          axios.post("/api/activity", {
+            userId,
+            action: "share",
+            details: fileName,
+          });
+        }
         return;
       } catch (err) {
         console.error("Share failed, falling back to download:", err);
@@ -80,6 +114,14 @@ export async function shareReceiptAsImage(
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
     }, 100);
+    // Log share activity (fallback)
+    if (userId) {
+      axios.post("/api/activity", {
+        userId,
+        action: "share",
+        details: fileName,
+      });
+    }
   } catch (err) {
     console.error(err);
   }
@@ -90,19 +132,36 @@ export async function shareReceiptAsImage(
  */
 export async function downloadReceiptAsPDF(
   elementId,
-  fileName = "receipt.pdf"
+  fileName = "receipt.pdf",
+  userId = null // Pass userId if available
 ) {
   const element = document.getElementById(elementId);
   if (!element) return;
   await waitForResources(element);
+  const restore = prepareForExport(element);
   try {
+    const width = element.offsetWidth;
+    const height = element.offsetHeight;
     const dataUrl = await toPng(element, {
       cacheBust: true,
       backgroundColor: "#fff",
+      width,
+      height,
+      style: {
+        margin: "0",
+        display: "inline-block",
+        maxWidth: "unset",
+      },
     });
     const img = new window.Image();
     img.src = dataUrl;
     img.onload = function () {
+      if (!img.width || !img.height) {
+        alert(
+          "Receipt image could not be captured. Please make sure the receipt is visible."
+        );
+        return;
+      }
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "px",
@@ -110,12 +169,24 @@ export async function downloadReceiptAsPDF(
       });
       pdf.addImage(dataUrl, "PNG", 0, 0, img.width, img.height);
       pdf.save(fileName);
+      // Log download activity
+      if (userId) {
+        axios.post("/api/activity", {
+          userId,
+          action: "download",
+          details: fileName,
+        });
+      }
     };
     img.onerror = function (err) {
+      alert("Error loading receipt image for PDF export.");
       console.error(err);
     };
   } catch (err) {
+    alert("Error generating receipt PDF: " + (err?.message || err));
     console.error(err);
+  } finally {
+    restore();
   }
 }
 
@@ -129,10 +200,20 @@ export async function downloadReceiptAsImage(
   const element = document.getElementById(elementId);
   if (!element) return;
   await waitForResources(element);
+  const restore = prepareForExport(element);
   try {
+    const width = element.offsetWidth;
+    const height = element.offsetHeight;
     const dataUrl = await toPng(element, {
       cacheBust: true,
       backgroundColor: "#fff",
+      width,
+      height,
+      style: {
+        margin: "0",
+        display: "inline-block",
+        maxWidth: "unset",
+      },
     });
     const a = document.createElement("a");
     a.href = dataUrl;
@@ -144,5 +225,7 @@ export async function downloadReceiptAsImage(
     }, 100);
   } catch (err) {
     console.error(err);
+  } finally {
+    restore();
   }
 }
