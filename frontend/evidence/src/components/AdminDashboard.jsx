@@ -28,6 +28,7 @@ import {
   FaChartLine,
 } from "react-icons/fa";
 import { BASE_URL } from "../api/baseUrl";
+import axios from "axios";
 
 export default function AdminDashboard() {
   const [metrics, setMetrics] = useState(null);
@@ -38,12 +39,16 @@ export default function AdminDashboard() {
     async function fetchData() {
       setLoading(true);
       try {
-        const resMetrics = await fetch(`${BASE_URL}/admin/metrics`);
-        const resActivity = await fetch(`${BASE_URL}/admin/activity`);
-        console.log("Metrics response:", resMetrics);
-        console.log("Activity response:", resActivity);
-        setMetrics(await resMetrics.json());
-        setActivity(await resActivity.json());
+        const [metricsRes, activityRes] = await Promise.all([
+          axios.get(`${BASE_URL}/admin/metrics`),
+          axios.get(`${BASE_URL}/admin/activity`),
+        ]);
+        console.log("Metrics response:", metricsRes);
+        console.log("Activity response:", activityRes);
+        setMetrics(metricsRes.data);
+        setActivity(activityRes.data);
+      } catch (err) {
+        console.error("Error fetching admin dashboard data:", err);
       } finally {
         setLoading(false);
       }
@@ -127,6 +132,37 @@ export default function AdminDashboard() {
             {metrics?.shares ?? "-"}
           </div>
         </div>
+      </div>
+      {/* User Details Table */}
+      <div className="bg-white/10 rounded-xl p-6 shadow-lg mb-10 overflow-x-auto">
+        <h2 className="text-xl font-bold text-white mb-4">User Details</h2>
+        <table className="w-full text-left">
+          <thead>
+            <tr className="text-indigo-200">
+              <th className="py-2 px-2">Name</th>
+              <th className="py-2 px-2">Business</th>
+              <th className="py-2 px-2">Email</th>
+              <th className="py-2 px-2">Phone</th>
+              <th className="py-2 px-2">Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {metrics?.userDetails?.map((user) => (
+              <tr
+                key={user.id}
+                className="border-t border-indigo-800 text-indigo-100"
+              >
+                <td className="py-2 px-2">{user.name}</td>
+                <td className="py-2 px-2">{user.businessName || "-"}</td>
+                <td className="py-2 px-2">{user.email}</td>
+                <td className="py-2 px-2">{user.phoneNumber || "-"}</td>
+                <td className="py-2 px-2">
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       {/* Recent Activity Table */}
       <div className="bg-white/10 rounded-xl p-6 shadow-lg mb-10 overflow-x-auto">

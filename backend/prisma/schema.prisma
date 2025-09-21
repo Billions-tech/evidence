@@ -1,4 +1,3 @@
-
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -16,36 +15,37 @@ datasource db {
 }
 
 model User {
-  id               Int      @id @default(autoincrement())
+  id               Int             @id @default(autoincrement())
   name             String
-  email            String   @unique
+  email            String          @unique
   password         String
   phoneNumber      String?
   businessName     String?
   logo             String?
   slogan           String?
   defaultFooterMsg String?
-  createdAt        DateTime @default(now())
+  createdAt        DateTime        @default(now())
   receipts         Receipt[]
   notes            Note[]
   expenses         Expense[]
   inventory        InventoryItem[]
+  ActivityLog      ActivityLog[]
 }
 
 model Receipt {
-  id        Int           @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   userId    Int
   customer  String
   footerMsg String?
-  createdAt DateTime      @default(now())
+  createdAt DateTime @default(now())
 
   // Relations
-  user      User          @relation(fields: [userId], references: [id])
-  items     ReceiptItem[]
+  user  User          @relation(fields: [userId], references: [id])
+  items ReceiptItem[]
 }
 
 model ReceiptItem {
-  id        Int      @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   receiptId Int
   item      String
   unit      String
@@ -53,7 +53,7 @@ model ReceiptItem {
   total     Float
 
   // Relations
-  receipt   Receipt  @relation(fields: [receiptId], references: [id])
+  receipt Receipt @relation(fields: [receiptId], references: [id])
 }
 
 model Note {
@@ -63,19 +63,19 @@ model Note {
   content   String
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Expense {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  title     String
-  amount    Float
-  category  String?
-  date      DateTime @default(now())
-  note      String?
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  title    String
+  amount   Float
+  category String?
+  date     DateTime @default(now())
+  note     String?
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model InventoryItem {
@@ -89,14 +89,15 @@ model InventoryItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model ActivityLog {
   id        Int      @id @default(autoincrement())
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
   action    String
   details   String?
   timestamp DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

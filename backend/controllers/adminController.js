@@ -3,7 +3,17 @@
 module.exports = {
   async getMetrics(prisma, req, res) {
     try {
-      const users = await prisma.user.count();
+      const usersCount = await prisma.user.count();
+      const userDetails = await prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          businessName: true,
+          email: true,
+          phoneNumber: true,
+          createdAt: true,
+        },
+      });
       const receipts = await prisma.receipt.count();
       const downloads = await prisma.activityLog.count({
         where: { action: "download" },
@@ -11,7 +21,7 @@ module.exports = {
       const shares = await prisma.activityLog.count({
         where: { action: "share" },
       });
-      res.json({ users, receipts, downloads, shares });
+      res.json({ users: usersCount, userDetails, receipts, downloads, shares });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

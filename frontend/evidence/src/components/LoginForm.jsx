@@ -56,7 +56,7 @@ export default function LoginForm() {
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
-              className="w-full bg-transparent outline-none placeholder-indigo-300"
+              className="w-full bg-transparent text-white outline-none placeholder-indigo-300"
               required
             />
           </div>
