@@ -1,4 +1,7 @@
 // controllers/authController.js
+
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -46,4 +49,52 @@ async function login(prisma, data) {
   return { user, token };
 }
 
-module.exports = { register, login };
+
+async function requestPasswordReset(prisma, email, baseUrl) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new Error("No user with that email");
+  // Generate token
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 30); // 30 min
+  await prisma.passwordResetToken.create({
+    data: { userId: user.id, token, expiresAt },
+  });
+  // Send email
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Evidence Password Reset",
+    html: `<p>Click <a href='${resetUrl}'>here</a> to reset your password. This link expires in 30 minutes.</p>`,
+  });
+  return true;
+}
+
+async function resetPassword(prisma, token, newPassword) {
+  const reset = await prisma.passwordResetToken.findUnique({
+    where: { token },
+  });
+  if (!reset || reset.used || reset.expiresAt < new Date())
+    throw new Error("Invalid or expired token");
+  const user = await prisma.user.findUnique({ where: { id: reset.userId } });
+  if (!user) throw new Error("User not found");
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashed },
+  });
+  await prisma.passwordResetToken.update({
+    where: { token },
+    data: { used: true },
+  });
+  return true;
+}
+
+module.exports = { register, login, resetPassword, requestPasswordReset };

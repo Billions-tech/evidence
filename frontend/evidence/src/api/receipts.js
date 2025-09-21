@@ -1,3 +1,11 @@
+// Verify a receipt by uploading an image/PDF
+export function verifyUploadReceipt(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return axios.post(`${RECEIPTS_URL}/verify-upload`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+}
 // Get dashboard summary for a given month/year
 export function getDashboardSummary({ month, year, token }) {
   return axios.get(

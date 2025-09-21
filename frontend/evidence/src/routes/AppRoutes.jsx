@@ -27,6 +27,7 @@ import Profile from "../components/Profile";
 import Inventory from "../components/Inventory";
 import LandingPage from "../components/LandingPage";
 import AdminDashboard from "../components/AdminDashboard";
+import ResetPassword from "../components/ResetPassword";
 
 function ReceiptDisplayPage() {
   const { id } = useParams();
@@ -184,6 +185,7 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="*"
           element={

@@ -20,3 +20,11 @@ export function getProfile(token) {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export function requestPasswordReset(email) {
+  return axios.post(`${BASE_URL}/auth/request-password-reset`, { email });
+}
+
+export function resetPassword(token, newPassword) {
+  return axios.post(`${BASE_URL}/auth/reset-password`, { token, newPassword });
+}

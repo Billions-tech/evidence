@@ -1,3 +1,35 @@
+// Verify receipt from uploaded image/PDF
+const Jimp = require("jimp");
+const QrCode = require("qrcode-reader");
+
+async function verifyUploadReceipt(prisma, fileBuffer) {
+  // Try to extract QR code from image
+  try {
+    const image = await Jimp.read(fileBuffer);
+    return await new Promise((resolve) => {
+      const qr = new QrCode();
+      qr.callback = async (err, value) => {
+        if (err || !value) {
+          resolve({ valid: false, error: "QR code not found in image." });
+        } else {
+          // Use the decoded QR code data to verify receipt
+          const receipt = await verifyReceipt(prisma, value.result);
+          if (receipt) {
+            resolve({ valid: true, receipt, qrData: value.result });
+          } else {
+            resolve({ valid: false, error: "Receipt not found or invalid." });
+          }
+        }
+      };
+      qr.decode(image.bitmap);
+    });
+  } catch (err) {
+    return {
+      valid: false,
+      error: "Failed to process image or extract QR code.",
+    };
+  }
+}
 // Monthly summary for dashboard
 async function getMonthlySummary(prisma, userId, month, year) {
   // Calculate start and end dates for the month
@@ -118,4 +150,5 @@ module.exports = {
   deleteReceipt,
   verifyReceipt,
   getMonthlySummary,
+  verifyUploadReceipt,
 };

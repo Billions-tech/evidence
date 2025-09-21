@@ -2,6 +2,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { login as loginApi } from "../api/auth";
+import { requestPasswordReset } from "../api/auth";
 import { AuthContext } from "../context/AuthContext";
 import { showError, showSuccess } from "./SweetAlert";
 import { FaEnvelope, FaLock } from "react-icons/fa";
@@ -10,6 +11,10 @@ export default function LoginForm() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMsg, setForgotMsg] = useState("");
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
@@ -84,7 +89,7 @@ export default function LoginForm() {
           )}
         </form>
 
-        <div className=" my-4 font-bold tracking-wider text-center w-full text-indigo-200 text-sm">
+        <div className="my-4 font-bold tracking-wider text-center w-full text-indigo-200 text-sm">
           Don't have an account?{" "}
           <a
             href="/register"
@@ -93,6 +98,70 @@ export default function LoginForm() {
             Register
           </a>
         </div>
+        <div className="my-2 text-center">
+          <button
+            type="button"
+            className="text-indigo-300 underline text-sm font-semibold"
+            onClick={() => setShowForgot(true)}
+          >
+            Forgot Password?
+          </button>
+        </div>
+        {/* Forgot Password Modal */}
+        {showForgot && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="bg-white/10 rounded-xl p-6 shadow-lg w-full max-w-md relative border border-indigo-700">
+              <button
+                className="absolute top-2 right-3 text-indigo-200 text-xl font-bold hover:text-white"
+                onClick={() => setShowForgot(false)}
+              >
+                ×
+              </button>
+              <h3 className="text-xl font-bold mb-4 text-indigo-200 text-center">
+                Reset Password
+              </h3>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setForgotLoading(true);
+                  setForgotMsg("");
+                  try {
+                    await requestPasswordReset(forgotEmail);
+                    setForgotMsg(
+                      "If your email exists, a reset link will be sent."
+                    );
+                  } catch (err) {
+                    console.error(err);
+                    setForgotMsg("Failed to send reset email.");
+                  }
+                  setForgotLoading(false);
+                }}
+                className="space-y-4"
+              >
+                <input
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-2 rounded bg-white/20 text-white border border-indigo-700 outline-none"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="w-full py-2 rounded bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold shadow-lg"
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? "Sending..." : "Send Reset Link"}
+                </button>
+                {forgotMsg && (
+                  <div className="mt-2 text-indigo-200 text-center">
+                    {forgotMsg}
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

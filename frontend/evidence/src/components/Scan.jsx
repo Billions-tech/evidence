@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { verifyReceipt } from "../api/receipts";
+import { verifyUploadReceipt } from "../api/receipts";
 import { FaCheckCircle, FaTimesCircle, FaQrcode } from "react-icons/fa";
 
 function Scan() {
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
   const [verification, setVerification] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
   const qrRef = useRef(null);
 
   useEffect(() => {
@@ -32,7 +35,8 @@ function Scan() {
               console.error(err);
               setVerification({
                 valid: false,
-                error: "Verification failed or receipt not found",
+                error:
+                  "Receipt not found. Please check the QR code or upload the receipt for verification.",
               });
             }
           },
@@ -60,6 +64,37 @@ function Scan() {
     };
   }, []);
 
+  // Handle receipt upload
+  async function handleUpload(e) {
+    setUploading(true);
+    setUploadError(null);
+    setScanResult(null);
+    setVerification(null);
+    const file = e.target.files[0];
+    if (!file) {
+      setUploading(false);
+      return;
+    }
+    try {
+      const res = await verifyUploadReceipt(file);
+      const data = res.data;
+      if (data.valid) {
+        setVerification(data);
+        setScanResult(data.qrData || "");
+      } else {
+        setVerification({
+          valid: false,
+          error: data.error || "Receipt not found or invalid.",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setUploadError("Upload failed or server error.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="w-full min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-indigo-100 via-purple-100 to-white py-8 px-2">
       <div className="w-full max-w-md mx-auto">
@@ -74,6 +109,22 @@ function Scan() {
             className="rounded-xl overflow-hidden border border-indigo-200 bg-indigo-50 flex items-center justify-center"
             style={{ width: "100%", maxWidth: 420, height: 420 }}
           />
+          {/* Receipt Upload */}
+          <div className="w-full mt-6 flex flex-col items-center">
+            <label className="block text-indigo-700 font-semibold mb-2">
+              Or upload receipt to verify:
+            </label>
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={handleUpload}
+              disabled={uploading}
+              className="block w-full max-w-xs text-sm text-indigo-700 bg-indigo-50 rounded p-2 border border-indigo-200"
+            />
+            {uploadError && (
+              <div className="mt-2 text-red-600 text-sm">{uploadError}</div>
+            )}
+          </div>
           {scanResult && (
             <div className="w-full mt-6 p-4 rounded-2xl shadow bg-gradient-to-br from-green-50 to-green-100 text-green-900 text-center animate-fade-in">
               <div className="font-semibold text-green-700 text-lg flex items-center justify-center gap-2">

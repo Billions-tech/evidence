@@ -9,6 +9,25 @@ const {
 } = require("../controllers/receiptController");
 
 module.exports = (prisma) => {
+  const multer = require("multer");
+  const upload = multer();
+  const { verifyUploadReceipt } = require("../controllers/receiptController");
+  // Verify receipt authenticity from uploaded image/PDF
+  router.post("/verify-upload", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file || !req.file.buffer) {
+        return res
+          .status(400)
+          .json({ valid: false, error: "No file uploaded." });
+      }
+      const result = await verifyUploadReceipt(prisma, req.file.buffer);
+      res.json(result);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ valid: false, error: error.message || "Verification failed." });
+    }
+  });
   // Create a receipt
   router.post("/", async (req, res) => {
     try {
