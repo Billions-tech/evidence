@@ -72,7 +72,7 @@ async function requestPasswordReset(prisma, email, baseUrl) {
     from: process.env.EMAIL_USER,
     to: email,
     subject: "Evidence Password Reset",
-    html: `<p>Click <a href='${resetUrl}'>here</a> to reset your password. This link expires in 30 minutes.</p>`,
+    html: `<h2>Hi there</h2><br><p>Click <a href='${resetUrl}'>here</a> to reset your password. This link expires in 30 minutes. if you did not request a password reset, please ignore this email.</p><br><p>Thank you!</p>`,
   });
   return true;
 }

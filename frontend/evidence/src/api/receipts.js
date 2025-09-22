@@ -1,9 +1,12 @@
 // Verify a receipt by uploading an image/PDF
-export function verifyUploadReceipt(file) {
+export function verifyUploadReceipt(file, token) {
   const formData = new FormData();
   formData.append("file", file);
   return axios.post(`${RECEIPTS_URL}/verify-upload`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
   });
 }
 // Get dashboard summary for a given month/year
@@ -24,8 +27,14 @@ export function getAllReceipts(token) {
 }
 
 // Verify a receipt by QR data
-export function verifyReceipt(qrData) {
-  return axios.post(`${RECEIPTS_URL}/verify`, { qrData });
+export function verifyReceipt(qrData, token) {
+  return axios.post(
+    `${RECEIPTS_URL}/verify`,
+    { qrData },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
 }
 // src/api/receipts.js
 import axios from "axios";

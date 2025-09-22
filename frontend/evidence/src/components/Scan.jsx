@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { verifyReceipt } from "../api/receipts";
 import { verifyUploadReceipt } from "../api/receipts";
 import { FaCheckCircle, FaTimesCircle, FaQrcode } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
 
 function Scan() {
   const [scanResult, setScanResult] = useState(null);
@@ -11,6 +12,7 @@ function Scan() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const qrRef = useRef(null);
+  const { token } = useContext(AuthContext);
 
   useEffect(() => {
     let html5Qr;
@@ -29,7 +31,7 @@ function Scan() {
             html5Qr.stop();
             // Verify with backend
             try {
-              const res = await verifyReceipt(decodedText);
+              const res = await verifyReceipt(decodedText, token);
               setVerification(res.data);
             } catch (err) {
               console.error(err);
@@ -62,7 +64,7 @@ function Scan() {
         }
       }
     };
-  }, []);
+  }, [token]);
 
   // Handle receipt upload
   async function handleUpload(e) {
@@ -76,7 +78,7 @@ function Scan() {
       return;
     }
     try {
-      const res = await verifyUploadReceipt(file);
+      const res = await verifyUploadReceipt(file, token);
       const data = res.data;
       if (data.valid) {
         setVerification(data);
@@ -86,10 +88,19 @@ function Scan() {
           valid: false,
           error: data.error || "Receipt not found or invalid.",
         });
+        setUploadError(data.error || "Receipt not found or invalid.");
       }
     } catch (err) {
       console.error(err);
-      setUploadError("Upload failed or server error.");
+      setUploadError(
+        err.response?.data?.error || "Upload failed or server error."
+      );
+      setVerification({
+        valid: false,
+        error:
+          err.response?.data?.error ||
+          "Failed to process image or extract QR code.",
+      });
     } finally {
       setUploading(false);
     }

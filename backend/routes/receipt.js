@@ -7,11 +7,11 @@ const {
   deleteReceipt,
   verifyReceipt,
 } = require("../controllers/receiptController");
+const multer = require("multer");
+const { verifyUploadReceipt } = require("../controllers/receiptController");
 
 module.exports = (prisma) => {
-  const multer = require("multer");
   const upload = multer();
-  const { verifyUploadReceipt } = require("../controllers/receiptController");
   // Verify receipt authenticity from uploaded image/PDF
   router.post("/verify-upload", upload.single("file"), async (req, res) => {
     try {

@@ -1,15 +1,52 @@
 // Verify receipt from uploaded image/PDF
 const Jimp = require("jimp");
 const QrCode = require("qrcode-reader");
+const fileType = require("file-type");
+const Poppler = require("pdf-poppler");
+const fs = require("fs");
 
 async function verifyUploadReceipt(prisma, fileBuffer) {
-  // Try to extract QR code from image
+  let bufferToProcess = fileBuffer;
   try {
-    const image = await Jimp.read(fileBuffer);
+    // Detect file type
+    const type = await fileType.fromBuffer(fileBuffer);
+    if (type && type.mime === "application/pdf") {
+      // Convert first page of PDF to image
+      const tmpPath = `./tmp_${Date.now()}.pdf`;
+      fs.writeFileSync(tmpPath, fileBuffer);
+      const outputDir = `./tmp_${Date.now()}`;
+      fs.mkdirSync(outputDir);
+      await Poppler.convert(tmpPath, {
+        format: "jpeg",
+        out_dir: outputDir,
+        out_prefix: "page",
+        page: 1,
+      });
+      const imgPath = `${outputDir}/page-1.jpg`;
+      bufferToProcess = fs.readFileSync(imgPath);
+      // Clean up temp files
+      fs.unlinkSync(tmpPath);
+      fs.unlinkSync(imgPath);
+      fs.rmdirSync(outputDir);
+    }
+    // Preprocess image for better QR detection
+    let image = await Jimp.read(bufferToProcess);
+    // Log image info for debugging
+    // Crop center square of the image before resizing
+    const minDim = Math.min(image.bitmap.width, image.bitmap.height);
+    const cropX = Math.floor((image.bitmap.width - minDim) / 2);
+    const cropY = Math.floor((image.bitmap.height - minDim) / 2);
+    image = image.crop(cropX, cropY, minDim, minDim);
+    // Resize to larger square for QR detection
+    image = image.resize(600, 600);
+    // Less aggressive preprocessing: only greyscale
+    image = image.greyscale();
+    // Try QR detection
     return await new Promise((resolve) => {
       const qr = new QrCode();
       qr.callback = async (err, value) => {
         if (err || !value) {
+          console.error("QR decode error:", err);
           resolve({ valid: false, error: "QR code not found in image." });
         } else {
           // Use the decoded QR code data to verify receipt
@@ -24,6 +61,7 @@ async function verifyUploadReceipt(prisma, fileBuffer) {
       qr.decode(image.bitmap);
     });
   } catch (err) {
+    console.error("QR extraction error:", err);
     return {
       valid: false,
       error: "Failed to process image or extract QR code.",

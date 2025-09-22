@@ -192,7 +192,7 @@ export default function ReceiptDisplay({ receipt }) {
         </div>
         {/* QR Code */}
         <div className="mb-6 flex flex-col items-center justify-center">
-          <QRCodeSVG value={qrData} size={64} className="mx-auto text-black" />
+          <QRCodeSVG value={qrData} size={85} className="mx-auto text-black" />
           <div className="text-xs text-gray-500 mt-2">
             Scan for authenticity
           </div>
