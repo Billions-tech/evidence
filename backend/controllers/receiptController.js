@@ -2,7 +2,7 @@
 const Jimp = require("jimp");
 const QrCode = require("qrcode-reader");
 const fileType = require("file-type");
-const Poppler = require("pdf-poppler");
+// const Poppler = require("pdf-poppler");
 const fs = require("fs");
 
 async function verifyUploadReceipt(prisma, fileBuffer) {
@@ -11,23 +11,18 @@ async function verifyUploadReceipt(prisma, fileBuffer) {
     // Detect file type
     const type = await fileType.fromBuffer(fileBuffer);
     if (type && type.mime === "application/pdf") {
-      // Convert first page of PDF to image
-      const tmpPath = `./tmp_${Date.now()}.pdf`;
-      fs.writeFileSync(tmpPath, fileBuffer);
-      const outputDir = `./tmp_${Date.now()}`;
-      fs.mkdirSync(outputDir);
-      await Poppler.convert(tmpPath, {
-        format: "jpeg",
-        out_dir: outputDir,
-        out_prefix: "page",
-        page: 1,
-      });
-      const imgPath = `${outputDir}/page-1.jpg`;
-      bufferToProcess = fs.readFileSync(imgPath);
-      // Clean up temp files
-      fs.unlinkSync(tmpPath);
-      fs.unlinkSync(imgPath);
-      fs.rmdirSync(outputDir);
+      // Use pdf-lib to reject PDF uploads with a clear error message
+      //pdf-lib does not support image extraction so we cannot extract QR from PDF directly
+      // Instead, we inform the user to upload an image file
+      // Alternatively, we could implement a server-side PDF to image conversion using external tools
+      //we can use pdf-poppler but it requires poppler-utils to be installed on the server
+      // This may not be feasible in all deployment environments
+      // Hence, we choose to reject PDF uploads for now with a clear message
+      return {
+        valid: false,
+        error:
+          "PDF QR extraction is not supported on this platform. Please upload an image file🙏.",
+      };
     }
     // Preprocess image for better QR detection
     let image = await Jimp.read(bufferToProcess);
